@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using TMPro;
 
 public class MainManager : MonoBehaviour
 {
@@ -12,9 +13,13 @@ public class MainManager : MonoBehaviour
 
     public Text ScoreText;
     public GameObject GameOverText;
-    
+    [SerializeField] TextMeshProUGUI NewScoreText;
+    [SerializeField] Text BestScoreText;
+
+
     private bool m_Started = false;
     private int m_Points;
+    private string m_playerName;
     
     private bool m_GameOver = false;
 
@@ -22,6 +27,8 @@ public class MainManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        m_playerName = MenuManager.instance.playerName;
+
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
         
@@ -36,6 +43,8 @@ public class MainManager : MonoBehaviour
                 brick.onDestroyed.AddListener(AddPoint);
             }
         }
+        BestScoreText.text = $"Best Score: {MenuManager.instance.bestPlayer} {MenuManager.instance.bestScore}";
+        ScoreText.text = $"{m_playerName} Score : {m_Points}";
     }
 
     private void Update()
@@ -58,6 +67,7 @@ public class MainManager : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+                NewScoreText.SetText("");
             }
         }
     }
@@ -65,12 +75,24 @@ public class MainManager : MonoBehaviour
     void AddPoint(int point)
     {
         m_Points += point;
-        ScoreText.text = $"Score : {m_Points}";
+        ScoreText.text = $"{m_playerName} Score : {m_Points}";
     }
 
     public void GameOver()
     {
         m_GameOver = true;
+        CheckHighscore();
         GameOverText.SetActive(true);
     }
+
+    private void CheckHighscore()
+	{
+        if(m_Points > MenuManager.instance.bestScore)
+		{
+            MenuManager.instance.bestScore = m_Points;
+            MenuManager.instance.bestPlayer = m_playerName;
+            NewScoreText.SetText($"New High Score!\n{m_playerName} {m_Points}");
+            MenuManager.instance.SaveScores();
+        }
+	}
 }
